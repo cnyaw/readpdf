@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" > 
+  <CheckBoxPreference
+    android:key="prefLightTheme"
+    android:defaultValue="true"
+    android:title="@string/pref_light_theme"
+    android:summary="@string/pref_light_theme_summary"
+    />
+  <ListPreference
+    android:key="prefFontSize"
+    android:defaultValue="2"
+    android:title="@string/pref_font_size"
+    android:summary="@string/pref_font_size_summary"
+    android:entries="@array/font_size_name"
+    android:entryValues="@array/font_size_value"
+    />
+</PreferenceScreen>

@@ -1,0 +1,39 @@
+<LinearLayout
+  xmlns:android="http://schemas.android.com/apk/res/android"
+  android:orientation="vertical"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  >
+  <TextView
+    android:id="@+id/captxt"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    />
+  <ScrollView
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_alignParentLeft="true"
+    android:layout_alignParentTop="true"
+    android:scrollbars="vertical" >
+    <LinearLayout
+      xmlns:android="http://schemas.android.com/apk/res/android"
+      android:orientation="vertical"
+      android:layout_width="fill_parent"
+      android:layout_height="fill_parent"
+      >
+      <TextView
+        android:id="@+id/pdftxt"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textIsSelectable="true"
+        android:textAppearance="?android:attr/textAppearance"
+        />
+      <Button
+        android:id="@+id/load_more"
+        android:text="@string/load_more"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        />
+     </LinearLayout>
+  </ScrollView>
+</LinearLayout>

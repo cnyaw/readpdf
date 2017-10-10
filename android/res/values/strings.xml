@@ -25,7 +25,7 @@
   <string name="pref_cat_personalization">Personalization</string>
   <string name="pref_cat_convert">Convert PDF to TXT</string>
   <string name="pref_convert_warn">Convert Warning</string>
-  <string name="pref_convert_warn_summary">Display warning message before convertion</string>
+  <string name="pref_convert_warn_summary">Display warning message before conversion</string>
   <string name="warn_dont_show_again">Don\'t show again</string>
   <string name="warn_msg">PLEASE NOTE: This tool can only extract pure text in the PDF file, and can not convert <font color='red'>IMAGES</font> to text. You will need OCR tools to convert images to text.</string>
 </resources>

@@ -29,6 +29,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
 {
   static final int ACTIVITY_CHOOSE_FILE = 1;
   static final int LOAD_MORE_SIZE = 16 * 1024;
+  static final int BACK_PRESS_AGAIN_TO_EXIT_TIME = 2000;
 
   boolean isDocView;
   File lstFile[];
@@ -94,7 +95,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
   @Override
   public void onBackPressed() {
     if (!isDocView) {
-      if (System.currentTimeMillis() < back_pressed + 2000) {
+      if (System.currentTimeMillis() < back_pressed + BACK_PRESS_AGAIN_TO_EXIT_TIME) {
         setDocListContent();
       } else {
         Toast.makeText(this, "Press once again to exit!", Toast.LENGTH_SHORT).show();

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="app_name">PDF to TXT Reader</string>
-  <string name="item_open">Open with default app</string>
+  <string name="item_open">Open with default APP</string>
   <string name="item_delete">Delete from cache</string>
   <string name="menu_settings">Settings</string>
   <string name="pref_light_theme">Light theme</string>
@@ -24,7 +24,7 @@
   </string-array>
   <string name="pref_cat_personalization">Personalization</string>
   <string name="pref_cat_convert">Convert PDF to TXT</string>
-  <string name="pref_convert_warn">Convert Warning</string>
+  <string name="pref_convert_warn">Convert warning</string>
   <string name="pref_convert_warn_summary">Display warning message before conversion</string>
   <string name="warn_dont_show_again">Don\'t show again</string>
   <string name="warn_msg">PLEASE NOTE: This tool can only extract pure text in the PDF file, and can not convert <font color='red'>IMAGES</font> to text. You will need OCR tools to convert images to text.</string>

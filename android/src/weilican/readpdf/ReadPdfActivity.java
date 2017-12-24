@@ -215,7 +215,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     Intent chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
     chooseFile.addCategory(Intent.CATEGORY_OPENABLE);
     chooseFile.setType("application/pdf");
-    Intent intent = Intent.createChooser(chooseFile, "Choose a pdf file");
+    Intent intent = Intent.createChooser(chooseFile, "Choose a PDF file");
     startActivityForResult(intent, ACTIVITY_CHOOSE_FILE);
   }
 
@@ -300,7 +300,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
 
   boolean doConvertPdf(final String pdfPath, final String txtPath) {
     final Handler h = new Handler();
-    dlgProgress = ProgressDialog.show(this, "Converting pdf to txt", "Please wait",true);
+    dlgProgress = ProgressDialog.show(this, "Converting PDF to TXT", "Please wait",true);
     new Thread(new Runnable() {
           @Override
           public void run() {
@@ -358,7 +358,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
   void openPdf(Uri uri) {
     String pdfPath = uri.getPath();
     if (!pdfPath.toLowerCase().contains(".pdf")) {
-      Toast.makeText(this, "Convert " + pdfPath + " to pdf fail!", Toast.LENGTH_LONG).show();
+      Toast.makeText(this, "Convert " + pdfPath + " to PDF fail!", Toast.LENGTH_LONG).show();
       return;
     }
     String tmpPath = getDiskCacheDir(this) + "/" + uri.getLastPathSegment();

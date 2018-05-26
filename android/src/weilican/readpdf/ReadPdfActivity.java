@@ -298,7 +298,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     return cachePath;
   }
 
-  boolean doConvertPdf(final String pdfPath, final String txtPath) {
+  void doConvertPdf(final String pdfPath, final String txtPath) {
     final Handler h = new Handler();
     dlgProgress = ProgressDialog.show(this, "Converting PDF to TXT", "Please wait",true);
     new Thread(new Runnable() {
@@ -318,7 +318,9 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
             }
           }
      }).start();
-    return true;
+    if (null == dlgProgress) {
+      setTextViewContent(txtPath);
+    }
   }
 
   boolean isPrefConvertWarn() {
@@ -346,32 +348,29 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int which) {
         savePrefConvertWarn(!dontShowAgain.isChecked());
-        if (doConvertPdf(pdfPath, txtPath) && null == dlgProgress) {
-          setTextViewContent(txtPath);
-        }
+        doConvertPdf(pdfPath, txtPath);
       }
     });
     alert.show();
     return true;
   }
 
+  String getPdfTmpPath(String pdfPath) {
+    String tmpPath = getDiskCacheDir(this) + pdfPath.substring(pdfPath.lastIndexOf('/'));
+    String txtPath = replaceFileExt(tmpPath, "txt");
+    return txtPath;
+  }
+
   void openPdf(Uri uri) {
     String pdfPath = uri.getPath();
-    if (!pdfPath.toLowerCase().contains(".pdf")) {
-      Toast.makeText(this, "Convert " + pdfPath + " to PDF fail!", Toast.LENGTH_LONG).show();
-      return;
-    }
-    String tmpPath = getDiskCacheDir(this) + "/" + uri.getLastPathSegment();
-    String txtPath = replaceFileExt(tmpPath, "txt");
+    String txtPath = getPdfTmpPath(pdfPath);
     File file = new File(txtPath);
     if (file.exists()) {
       setTextViewContent(txtPath);
       return;
     }
     if (!showWarnDlg(pdfPath, txtPath)) {
-      if (doConvertPdf(pdfPath, txtPath) && null == dlgProgress) {
-        setTextViewContent(txtPath);
-      }
+      doConvertPdf(pdfPath, txtPath);
     }
   }
 

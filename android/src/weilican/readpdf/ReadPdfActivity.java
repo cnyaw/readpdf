@@ -31,9 +31,9 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
   static final int LOAD_MORE_SIZE = 16 * 1024;
   static final int BACK_PRESS_AGAIN_TO_EXIT_TIME = 2000;
 
+  static ReadPdfActivity thisActivity;
   boolean isDocView;
   File lstFile[];
-  static ProgressDialog dlgProgress;
   String txtString;
   int curPos, endPos;
   long back_pressed;
@@ -52,6 +52,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
       return;
     }
 
+    thisActivity = this;
     setAppTheme();
     setDocListContent();
     Intent intent = getIntent();
@@ -197,7 +198,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     listView.setOnItemClickListener(new OnItemClickListener() {
       @Override
       public void onItemClick(AdapterView<?> parent, View view, int index, long id) {
-        setTextViewContent(lstFile[index].toString());
+        setTextViewContent(lstFile[index].toString(), null);
       }
     });
     Button btn = (Button)findViewById(R.id.btn_open);
@@ -223,13 +224,21 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     return path.substring(0, path.lastIndexOf('.')) + "." + ext;
   }
 
-  void setTextViewContent(String txtPath) {
+  void setTextViewContent(String txtPath, byte bytes[]) {
     setContentView(R.layout.main);
     TextView capTxt = (TextView)findViewById(R.id.captxt);
     capTxt.setText(txtPath);
     final TextView pdfTxt = (TextView)findViewById(R.id.pdftxt);
     setFontSize();
-    txtString = readText(txtPath);
+    if (null != bytes) {
+      try {
+        txtString = new String(bytes, "UTF-8");
+      } catch (Exception e) {
+        txtString = readText(txtPath);
+      }
+    } else {
+      txtString = readText(txtPath);
+    }
     curPos = 0;
     endPos = getEndPos();
     pdfTxt.setText(txtString.substring(0, endPos));
@@ -269,22 +278,23 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
   }
 
   String readText(String txtPath) {
-    File file = new File(txtPath);
-    if (!file.exists()) {
-      return "";
-    }
-    StringBuilder text = new StringBuilder();
     try {
+      File file = new File(txtPath);
+      if (!file.exists()) {
+        return "";
+      }
+      StringBuilder text = new StringBuilder();
       BufferedReader br = new BufferedReader(new FileReader(file));
       String line;
       while (null != (line = br.readLine())) {
         text.append(line);
         text.append('\n');
       }
-    } catch (IOException e) {
+      return text.toString();
+    } catch (Exception e) {
       Toast.makeText(this, "Read " + txtPath + " fail!", Toast.LENGTH_LONG).show();
     }
-    return text.toString();
+    return "";
   }
 
   String getDiskCacheDir(Context context) {
@@ -298,29 +308,33 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     return cachePath;
   }
 
-  void doConvertPdf(final String pdfPath, final String txtPath) {
+  void doConvertPdf(final byte pdfdata[], final String txtPath) {
     final Handler h = new Handler();
-    dlgProgress = ProgressDialog.show(this, "Converting PDF to TXT", "Please wait",true);
+    final ProgressDialog dlgProgress = ProgressDialog.show(this, "Converting PDF to TXT", "Please wait",true);
     new Thread(new Runnable() {
           @Override
           public void run() {
             try {
-              pdftotxt(pdfPath, txtPath);
-            } finally {
+              final byte txtdata[] = pdftotxt(pdfdata);
               dlgProgress.dismiss();
-              dlgProgress = null;
-              h.post(new Runnable() {
-                @Override
-                public void run() {
-                  setTextViewContent(txtPath);
-                }
-              });
+              if (null != txtdata && 0 < txtdata.length) {
+                FileOutputStream os = new FileOutputStream(txtPath);
+                os.write(txtdata);
+                os.close();
+                h.post(new Runnable() {
+                  @Override
+                  public void run() {
+                    setTextViewContent(txtPath, txtdata);
+                  }
+                });
+              } else {
+                Toast.makeText(thisActivity, "Convert PDF to TXT fail!", Toast.LENGTH_LONG).show();
+              }
+            } catch (Exception e) {
+              dlgProgress.dismiss();
             }
           }
      }).start();
-    if (null == dlgProgress) {
-      setTextViewContent(txtPath);
-    }
   }
 
   boolean isPrefConvertWarn() {
@@ -335,7 +349,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     editor.commit();
   }
 
-  boolean showWarnDlg(final String pdfPath, final String txtPath) {
+  boolean showWarnDlg(final byte pdfdata[], final String txtPath) {
     if (!isPrefConvertWarn()) {
       return false;
     }
@@ -348,29 +362,50 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     alert.setPositiveButton("OK", new DialogInterface.OnClickListener() {
       public void onClick(DialogInterface dialog, int which) {
         savePrefConvertWarn(!dontShowAgain.isChecked());
-        doConvertPdf(pdfPath, txtPath);
+        doConvertPdf(pdfdata, txtPath);
       }
     });
     alert.show();
     return true;
   }
 
-  String getPdfTmpPath(String pdfPath) {
+  String getPdfTmpPath(Uri uri) {
+    String pdfPath = uri.getPath();
     String tmpPath = getDiskCacheDir(this) + pdfPath.substring(pdfPath.lastIndexOf('/'));
     String txtPath = replaceFileExt(tmpPath, "txt");
     return txtPath;
   }
 
+  byte[] bytesFromUri(Uri uri) {
+    try {
+      InputStream is = getContentResolver().openInputStream(uri);
+      ByteArrayOutputStream os = new ByteArrayOutputStream();
+      int nRead;
+      byte data[] = new byte[16384];
+      while (-1 != (nRead = is.read(data, 0, data.length))) {
+        os.write(data, 0, nRead);
+      }
+      os.flush();
+      return os.toByteArray();
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
   void openPdf(Uri uri) {
-    String pdfPath = uri.getPath();
-    String txtPath = getPdfTmpPath(pdfPath);
+    String txtPath = getPdfTmpPath(uri);
     File file = new File(txtPath);
     if (file.exists()) {
-      setTextViewContent(txtPath);
+      setTextViewContent(txtPath, null);
       return;
     }
-    if (!showWarnDlg(pdfPath, txtPath)) {
-      doConvertPdf(pdfPath, txtPath);
+    byte pdfdata[] = bytesFromUri(uri);
+    if (null == pdfdata) {
+      Toast.makeText(this, "Read PDF data fail!", Toast.LENGTH_LONG).show();
+      return;
+    }
+    if (!showWarnDlg(pdfdata, txtPath)) {
+      doConvertPdf(pdfdata, txtPath);
     }
   }
 
@@ -378,7 +413,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
   // JNI.
   //
 
-  static native boolean pdftotxt(String pdfPath, String txtPath);
+  static native byte[] pdftotxt(byte pdfdata[]);
 
   static {
     System.loadLibrary("readpdf");

@@ -17,6 +17,8 @@
 #include <stddef.h>
 #include <string.h>
 
+#include <string>
+
 #include "GlobalParams.h"
 #include "PDFDoc.h"
 #include "TextOutputDev.h"
@@ -25,14 +27,20 @@
 
 extern "C" {
 
-JNIEXPORT jboolean JNICALL Java_weilican_readpdf_ReadPdfActivity_pdftotxt(JNIEnv * env, jobject obj, jstring fnPdf, jstring fnOut)
+void pdftotxtTextOutputFunc(void *stream, const char *text, int len)
 {
-  if (!fnPdf || !fnOut) {
-    return false;
+  std::string *pStr = (std::string*)stream;
+  pStr->append(text, len);
+}
+
+JNIEXPORT jbyteArray JNICALL Java_weilican_readpdf_ReadPdfActivity_pdftotxt(JNIEnv * env, jobject obj, jbyteArray pdfdata)
+{
+  if (!pdfdata) {
+    return NULL;
   }
 
-  const char* strFnPdf = env->GetStringUTFChars(fnPdf, (jboolean *)0);
-  const char* strFnOut = env->GetStringUTFChars(fnOut, (jboolean *)0);
+  jbyte *pBytes = env->GetByteArrayElements(pdfdata, NULL);
+  int lenBytes = env->GetArrayLength(pdfdata);
 
   int firstPage = 1;
   int lastPage = 0;
@@ -46,16 +54,18 @@ JNIEXPORT jboolean JNICALL Java_weilican_readpdf_ReadPdfActivity_pdftotxt(JNIEnv
   char cfgFileName[256] = "";
 
   PDFDoc *doc;
-  GString *fileName;
-  GString *textFileName;
+  MemStream *memstr;
   GString *ownerPW, *userPW;
   TextOutputControl textOutControl;
   TextOutputDev *textOut;
   UnicodeMap *uMap;
-  bool bRet = false;
 
-  fileName = new GString(strFnPdf);
-  textFileName = new GString(strFnOut);
+  jbyteArray pRetBytes = NULL;
+  std::string outstr;
+
+  Object nulObj;
+  nulObj.initNull();
+  memstr = new MemStream((char*)pBytes, 0, (Guint)lenBytes, &nulObj);
 
   // read config file
   globalParams = new GlobalParams(cfgFileName);
@@ -74,7 +84,7 @@ JNIEXPORT jboolean JNICALL Java_weilican_readpdf_ReadPdfActivity_pdftotxt(JNIEnv
   // get mapping to output encoding
   if (!(uMap = globalParams->getTextEncoding())) {
     error(errConfig, -1, "Couldn't get text encoding");
-    delete fileName;
+    delete memstr;
     goto err1;
   }
 
@@ -89,7 +99,7 @@ JNIEXPORT jboolean JNICALL Java_weilican_readpdf_ReadPdfActivity_pdftotxt(JNIEnv
   } else {
     userPW = NULL;
   }
-  doc = new PDFDoc(fileName, ownerPW, userPW);
+  doc = new PDFDoc(memstr, ownerPW, userPW);
   if (userPW) {
     delete userPW;
   }
@@ -117,30 +127,30 @@ JNIEXPORT jboolean JNICALL Java_weilican_readpdf_ReadPdfActivity_pdftotxt(JNIEnv
   // write text file
   textOutControl.mode = textOutPhysLayout;
   textOutControl.fixedPitch = fixedPitch;
-
   textOutControl.clipText = clipText;
-  textOut = new TextOutputDev(textFileName->getCString(), &textOutControl, gFalse);
+
+  textOut = new TextOutputDev(pdftotxtTextOutputFunc, &outstr, &textOutControl);
   if (textOut->isOk()) {
     doc->displayPages(textOut, firstPage, lastPage, 72, 72, 0, gFalse, gTrue, gFalse);
   } else {
     delete textOut;
-    goto err3;
+    goto err2;
   }
   delete textOut;
 
-  bRet = true;
+  pRetBytes = env->NewByteArray(outstr.length());
+  env->SetByteArrayRegion(pRetBytes, 0, outstr.length(), (const jbyte*)outstr.c_str());
 
   // clean up
-err3:
-  delete textFileName;
 err2:
   delete doc;
   uMap->decRefCnt();
 err1:
   delete globalParams;
 err0:
+  env->ReleaseByteArrayElements(pdfdata, pBytes, JNI_ABORT);
 
-  return bRet;
+  return pRetBytes;
 }
 
 };

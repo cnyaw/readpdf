@@ -47,11 +47,6 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
   {
     super.onCreate(b);
 
-    if (!isTaskRoot()) {
-      finish();
-      return;
-    }
-
     thisActivity = this;
     setAppTheme();
     setDocListContent();
@@ -59,7 +54,13 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     if (null != intent) {
       String type = intent.getType();
       if (null != type && type.equals("application/pdf")) {
-        Uri uri = intent.getData();
+        String action = intent.getAction();
+        Uri uri = null;
+        if (Intent.ACTION_VIEW.equals(action)) {
+          uri = intent.getData();
+        } else if (Intent.ACTION_SEND.equals(action)) {
+          uri = (Uri)intent.getParcelableExtra(Intent.EXTRA_STREAM);
+        }
         if (null != uri) {
           openPdf(uri);
         }

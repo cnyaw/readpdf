@@ -370,8 +370,15 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     return true;
   }
 
+  boolean isDownloadsDocument(Uri uri) {
+    return "com.android.providers.downloads.documents".equals(uri.getAuthority());
+  }
+
   String getPdfTmpPath(Uri uri) {
     String pdfPath = uri.getPath();
+    if (isDownloadsDocument(uri)) {
+      pdfPath = "TempDownloadDoc/" + System.currentTimeMillis() + ".pdf";
+    }
     String tmpPath = getDiskCacheDir(this) + pdfPath.substring(pdfPath.lastIndexOf('/'));
     String txtPath = replaceFileExt(tmpPath, "txt");
     return txtPath;

@@ -229,6 +229,16 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     setContentView(R.layout.main);
     TextView capTxt = (TextView)findViewById(R.id.captxt);
     capTxt.setText(txtPath);
+    capTxt.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        ClipboardManager clipboard = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
+        String text = ((TextView)v).getText().toString();
+        ClipData clip = ClipData.newPlainText("label", text);
+        clipboard.setPrimaryClip(clip);
+        Toast.makeText(getApplicationContext(), "Text path has copied to clipboard.", Toast.LENGTH_LONG).show();
+      }
+    });
     final TextView pdfTxt = (TextView)findViewById(R.id.pdftxt);
     setFontSize();
     if (null != bytes) {

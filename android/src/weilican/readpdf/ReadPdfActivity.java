@@ -341,8 +341,14 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
               } else {
                 Toast.makeText(thisActivity, "Convert PDF to TXT fail!", Toast.LENGTH_LONG).show();
               }
-            } catch (Exception e) {
+            } catch (final Exception e) {
               dlgProgress.dismiss();
+              h.post(new Runnable() {
+                @Override
+                public void run() {
+                  Toast.makeText(thisActivity, "Convert PDF to TXT fail! " + e.toString(), Toast.LENGTH_LONG).show();
+                }
+              });
             }
           }
      }).start();

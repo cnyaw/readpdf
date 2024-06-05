@@ -320,7 +320,6 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
   }
 
   void doConvertPdf(final byte pdfdata[], final String txtPath) {
-    final Handler h = new Handler();
     final ProgressDialog dlgProgress = ProgressDialog.show(this, "Converting PDF to TXT", "Please wait",true);
     new Thread(new Runnable() {
           @Override
@@ -332,23 +331,25 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
                 FileOutputStream os = new FileOutputStream(txtPath);
                 os.write(txtdata);
                 os.close();
-                h.post(new Runnable() {
-                  @Override
+                runOnUiThread(new Thread(new Runnable() {
                   public void run() {
                     setTextViewContent(txtPath, txtdata);
                   }
-                });
+                }));
               } else {
-                Toast.makeText(thisActivity, "Convert PDF to TXT fail!", Toast.LENGTH_LONG).show();
+                runOnUiThread(new Thread(new Runnable() {
+                  public void run() {
+                    Toast.makeText(thisActivity, "Convert PDF to TXT fail!", Toast.LENGTH_LONG).show();
+                  }
+                }));
               }
             } catch (final Exception e) {
               dlgProgress.dismiss();
-              h.post(new Runnable() {
-                @Override
+              runOnUiThread(new Thread(new Runnable() {
                 public void run() {
                   Toast.makeText(thisActivity, "Convert PDF to TXT fail! " + e.toString(), Toast.LENGTH_LONG).show();
                 }
-              });
+              }));
             }
           }
      }).start();

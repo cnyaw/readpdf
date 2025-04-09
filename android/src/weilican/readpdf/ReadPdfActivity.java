@@ -70,24 +70,6 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
   }
 
   @Override
-  public boolean onCreateOptionsMenu(Menu menu) {
-    getMenuInflater().inflate(R.menu.settings, menu);
-    return true;
-  }
-
-  @Override
-  public boolean onOptionsItemSelected(MenuItem item) {
-    switch (item.getItemId())
-    {
-    case R.id.menu_settings:
-      Intent i = new Intent(this, SettingsActivity.class);
-      startActivity(i);
-      break;
-    }
-    return true;
-  }
-
-  @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     if (ACTIVITY_CHOOSE_FILE == requestCode && RESULT_OK == resultCode) {
       openPdf(data.getData());
@@ -205,11 +187,19 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
          return true;
       }
     });
-    Button btn = (Button)findViewById(R.id.btn_open);
-    btn.setOnClickListener(new OnClickListener() {
+    Button btnOpen = (Button)findViewById(R.id.btn_open);
+    btnOpen.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View view) {
         chooseFile();
+      }
+    });
+    Button btnSettings = (Button)findViewById(R.id.btn_settings);
+    btnSettings.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View view) {
+        Intent i = new Intent(thisActivity, SettingsActivity.class);
+        startActivity(i);
       }
     });
     isDocView = true;

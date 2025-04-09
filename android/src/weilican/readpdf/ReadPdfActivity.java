@@ -108,38 +108,34 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     }
   }
 
-  @Override
-  public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-    menu.clear();
-    if (isDocView) {
-      MenuInflater inflater = getMenuInflater();
-      inflater.inflate(R.menu.item_menu, menu);
-    }
-    super.onCreateContextMenu(menu, v, menuInfo);
-  }
-
-  @Override
-  public boolean onContextItemSelected(MenuItem item) {
-    AdapterContextMenuInfo info = (AdapterContextMenuInfo)item.getMenuInfo();
-    switch (item.getItemId())
-    {
-    case R.id.item_open:
-      {
-        Intent newIntent = new Intent(Intent.ACTION_VIEW);
-        newIntent.setDataAndType(Uri.fromFile(lstFile[info.position]), "text/plain");
-        try {
-          startActivity(newIntent);
-        } catch (ActivityNotFoundException e) {
-          Toast.makeText(this, "No handler for this type of file.", Toast.LENGTH_LONG).show();
+  void showDocItemPopupMenu(View view, final int position) {
+    PopupMenu popupMenu = new PopupMenu(this, view);
+    popupMenu.getMenuInflater().inflate(R.menu.item_menu, popupMenu.getMenu());
+    popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+      @Override
+      public boolean onMenuItemClick(MenuItem item) {
+        switch (item.getItemId()) {
+          case R.id.item_open:
+            {
+              Intent newIntent = new Intent(Intent.ACTION_VIEW);
+              newIntent.setDataAndType(Uri.fromFile(lstFile[position]), "text/plain");
+              try {
+                startActivity(newIntent);
+              } catch (ActivityNotFoundException e) {
+                Toast.makeText(thisActivity, "No handler for this type of file.", Toast.LENGTH_LONG).show();
+              }
+            }
+            return true;
+          case R.id.item_delete:
+            lstFile[position].delete();
+            setDocListContent();
+            return true;
+          default:
+            return false;
         }
       }
-      return true;
-    case R.id.item_delete:
-      lstFile[info.position].delete();
-      setDocListContent();
-      return true;
-    }
-    return super.onContextItemSelected(item);
+    });
+    popupMenu.show();
   }
 
   @Override
@@ -187,7 +183,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
 
   void setDocListContent() {
     setContentView(R.layout.doclist);
-    File dirCache = new File(getDiskCacheDir(this));
+    File dirCache = new File(getTempPath());
     lstFile = dirCache.listFiles();
     String values[] = new String[lstFile.length];
     for (int i = 0; i < lstFile.length; i++) {
@@ -202,6 +198,13 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
         setTextViewContent(lstFile[index].toString(), null);
       }
     });
+    listView.setOnItemLongClickListener(new OnItemLongClickListener() {
+      @Override
+      public boolean onItemLongClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+         showDocItemPopupMenu(arg1, arg2);
+         return true;
+      }
+    });
     Button btn = (Button)findViewById(R.id.btn_open);
     btn.setOnClickListener(new OnClickListener() {
       @Override
@@ -209,7 +212,6 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
         chooseFile();
       }
     });
-    registerForContextMenu(listView);
     isDocView = true;
   }
 
@@ -219,10 +221,6 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     chooseFile.setType("application/pdf");
     Intent intent = Intent.createChooser(chooseFile, "Choose a PDF file");
     startActivityForResult(intent, ACTIVITY_CHOOSE_FILE);
-  }
-
-  String replaceFileExt(String path, String ext) {
-    return path.substring(0, path.lastIndexOf('.')) + "." + ext;
   }
 
   void setTextViewContent(String txtPath, byte bytes[]) {
@@ -308,17 +306,6 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     return "";
   }
 
-  String getDiskCacheDir(Context context) {
-    String cachePath = null;
-    if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()) ||
-       !Environment.isExternalStorageRemovable()) {
-      cachePath = context.getExternalCacheDir().getPath();
-    } else {
-      cachePath = context.getCacheDir().getPath();
-    }
-    return cachePath;
-  }
-
   void doConvertPdf(final byte pdfdata[], final String txtPath) {
     final ProgressDialog dlgProgress = ProgressDialog.show(this, "Converting PDF to TXT", "Please wait",true);
     new Thread(new Runnable() {
@@ -387,18 +374,27 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     return true;
   }
 
-  boolean isDownloadsDocument(Uri uri) {
-    return "com.android.providers.downloads.documents".equals(uri.getAuthority());
+  String getTempPath() {
+    String cachePath = null;
+    File extCacheDir = Environment.getExternalStorageDirectory();
+    if (null != extCacheDir) {
+      cachePath = extCacheDir.getPath();
+    } else {
+      cachePath = getCacheDir().getPath();
+    }
+    String tmpDir = cachePath + "/temp/";
+    File dir = new File(tmpDir);
+    if (!dir.exists()) {
+      dir.mkdirs();                     // Create the directory if it doesn't exist
+    }
+    return tmpDir;
   }
 
   String getPdfTmpPath(Uri uri) {
+    String tmpDir = getTempPath();
     String pdfPath = uri.getPath();
-    if (isDownloadsDocument(uri)) {
-      pdfPath = "TempDownloadDoc/" + System.currentTimeMillis() + ".pdf";
-    }
-    String tmpPath = getDiskCacheDir(this) + pdfPath.substring(pdfPath.lastIndexOf('/'));
-    String txtPath = replaceFileExt(tmpPath, "txt");
-    return txtPath;
+    String filename = pdfPath.substring(pdfPath.lastIndexOf("/") + 1);
+    return tmpDir + filename + ".txt";
   }
 
   byte[] bytesFromUri(Uri uri) {

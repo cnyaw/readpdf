@@ -1,7 +1,5 @@
 # readpdf
 
-Android download https://play.google.com/store/apps/details?id=weilican.readpdf
-
 PDF to TXT Reader is a useful utility to convert pdf files to plain text.
 
 Features:

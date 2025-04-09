@@ -393,7 +393,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
   String getPdfTmpPath(Uri uri) {
     String tmpDir = getTempPath();
     String pdfPath = uri.getPath();
-    String filename = pdfPath.substring(pdfPath.lastIndexOf("/") + 1);
+    String filename = pdfPath.substring(pdfPath.lastIndexOf("/") + 1).replace(':', '+');
     return tmpDir + filename + ".txt";
   }
 

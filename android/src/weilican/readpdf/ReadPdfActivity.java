@@ -31,7 +31,6 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
   static final int LOAD_MORE_SIZE = 16 * 1024;
   static final int BACK_PRESS_AGAIN_TO_EXIT_TIME = 2000;
 
-  static ReadPdfActivity thisActivity;
   boolean isDocView;
   File lstFile[];
   String txtString;
@@ -47,7 +46,6 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
   {
     super.onCreate(b);
 
-    thisActivity = this;
     setAppTheme();
     setDocListContent();
     Intent intent = getIntent();
@@ -104,7 +102,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
               try {
                 startActivity(newIntent);
               } catch (ActivityNotFoundException e) {
-                Toast.makeText(thisActivity, "No handler for this type of file.", Toast.LENGTH_LONG).show();
+                Toast.makeText(ReadPdfActivity.this, "No handler for this type of file.", Toast.LENGTH_LONG).show();
               }
             }
             return true;
@@ -198,7 +196,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
     btnSettings.setOnClickListener(new OnClickListener() {
       @Override
       public void onClick(View view) {
-        Intent i = new Intent(thisActivity, SettingsActivity.class);
+        Intent i = new Intent(ReadPdfActivity.this, SettingsActivity.class);
         startActivity(i);
       }
     });
@@ -316,7 +314,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
               } else {
                 runOnUiThread(new Thread(new Runnable() {
                   public void run() {
-                    Toast.makeText(thisActivity, "Convert PDF to TXT fail!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(ReadPdfActivity.this, "Convert PDF to TXT fail!", Toast.LENGTH_LONG).show();
                   }
                 }));
               }
@@ -324,7 +322,7 @@ public class ReadPdfActivity extends Activity implements SharedPreferences.OnSha
               dlgProgress.dismiss();
               runOnUiThread(new Thread(new Runnable() {
                 public void run() {
-                  Toast.makeText(thisActivity, "Convert PDF to TXT fail! " + e.toString(), Toast.LENGTH_LONG).show();
+                  Toast.makeText(ReadPdfActivity.this, "Convert PDF to TXT fail! " + e.toString(), Toast.LENGTH_LONG).show();
                 }
               }));
             }
